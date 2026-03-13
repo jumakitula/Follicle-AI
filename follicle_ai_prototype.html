@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follicle AI — App Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1A7A4A;
+    --green-light: #27AE60;
+    --green-pale: #E8F5EE;
+    --green-mid: #C8E6C9;
+    --amber: #F39C12;
+    --amber-pale: #FFF8E1;
+    --red: #E74C3C;
+    --red-pale: #FDEDEC;
+    --blue: #2980B9;
+    --blue-pale: #EBF5FB;
+    --purple: #8E44AD;
+    --bg: #0D1F17;
+    --bg2: #111F17;
+    --surface: #162B1F;
+    --surface2: #1E3829;
+    --surface3: #243F30;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #F0F7F2;
+    --text2: #9BB8A5;
+    --text3: #6A8F79;
+    --accent: #3DDC84;
+    --accent2: #2ABB6A;
+    --transition: all 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0a1510;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px 60px;
+    overflow-x: hidden;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .page-header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .page-header p {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Phone shell ── */
+  .phone-scene {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone {
+    width: 375px;
+    height: 780px;
+    background: var(--bg);
+    border-radius: 48px;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 6px #0a1510,
+      0 0 0 7px rgba(255,255,255,0.06),
+      0 60px 120px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 34px;
+    background: #0a1510;
+    border-radius: 0 0 20px 20px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .notch-cam { width: 12px; height: 12px; border-radius: 50%; background: #1a2a20; border: 1.5px solid #2a3a28; }
+  .notch-pill { width: 60px; height: 5px; background: #1a2a20; border-radius: 3px; }
+
+  .status-bar {
+    position: absolute;
+    top: 12px; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    z-index: 50;
+  }
+
+  /* ── Screen container ── */
+  .screens-wrap {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    padding: 52px 0 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(40px);
+    transition: var(--transition);
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+  }
+  .screen.slide-out {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  /* ── Nav bar ── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px 12px;
+    flex-shrink: 0;
+  }
+  .nav-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .nav-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+  .nav-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .nav-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: white;
+  }
+
+  /* Scroll area */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+    scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    padding: 8px 0 20px;
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .tab-icon {
+    width: 22px; height: 22px;
+    position: relative;
+  }
+  .tab-label {
+    font-size: 10px;
+    color: var(--text3);
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  .tab.active .tab-label { color: var(--accent); }
+  .tab-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 0 auto;
+    opacity: 0;
+    transition: var(--transition);
+  }
+  .tab.active .tab-dot { opacity: 1; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .card-sm {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  /* ── Score ring ── */
+  .score-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 12px;
+  }
+  .ring-wrap { position: relative; width: 140px; height: 140px; margin-bottom: 12px; }
+  .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-score {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+  .ring-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* ── Metric grid ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .metric-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .metric-val.green { color: var(--accent); }
+  .metric-val.amber { color: var(--amber); }
+  .metric-val.red { color: var(--red); }
+  .metric-name { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  /* ── Alert cards ── */
+  .alert {
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .alert.success { background: rgba(61,220,132,0.08); border: 1px solid rgba(61,220,132,0.2); }
+  .alert.warning { background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.2); }
+  .alert.info { background: rgba(41,128,185,0.08); border: 1px solid rgba(41,128,185,0.2); }
+  .alert-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+  .alert.success .alert-icon { background: rgba(61,220,132,0.2); color: var(--accent); }
+  .alert.warning .alert-icon { background: rgba(243,156,18,0.2); color: var(--amber); }
+  .alert.info .alert-icon { background: rgba(41,128,185,0.2); color: var(--blue); }
+  .alert-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .alert-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* ── Progress bars ── */
+  .prog-wrap { margin-bottom: 12px; }
+  .prog-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .prog-name { font-size: 12px; color: var(--text2); }
+  .prog-val { font-size: 12px; font-family: 'DM Mono', monospace; }
+  .prog-val.green { color: var(--accent); }
+  .prog-val.amber { color: var(--amber); }
+  .prog-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+
+  /* ── Treatment items ── */
+  .treatment-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .treatment-item:last-child { border-bottom: none; }
+  .treatment-item:active { background: var(--surface2); margin: 0 -18px; padding: 13px 18px; border-radius: 12px; }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-content { flex: 1; }
+  .t-name { font-size: 13px; color: var(--text); font-weight: 500; }
+  .t-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .t-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: transparent;
+    transition: var(--transition);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .t-check.done { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* ── Scan screen ── */
+  .scan-viewport {
+    margin: 0 20px 14px;
+    border-radius: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scan-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(61,220,132,0.06) 0%, transparent 70%);
+  }
+  .scan-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 2px dashed rgba(61,220,132,0.4);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scan-ring::before {
+    content: '';
+    position: absolute;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 1px solid rgba(61,220,132,0.15);
+  }
+  .scan-ring::after {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    border: 1px solid rgba(61,220,132,0.07);
+  }
+  .scan-inner { width: 70px; height: 70px; border-radius: 50%; background: rgba(61,220,132,0.1); border: 1.5px solid rgba(61,220,132,0.3); }
+  .scan-pulse {
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  .scan-dots {
+    position: absolute; inset: 0;
+  }
+  .sdot {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    animation: sdotPulse 3s ease-in-out infinite;
+  }
+  @keyframes sdotPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+  .scan-hint {
+    position: absolute; bottom: 14px; left: 0; right: 0;
+    text-align: center;
+    font-size: 11px; color: var(--text3);
+  }
+
+  /* ── Heatmap ── */
+  .heatmap-container {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+  }
+  .heatmap-canvas { border-radius: 16px; }
+
+  /* ── Chart bars ── */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    height: 80px;
+    padding: 0 4px;
+  }
+  .bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    transition: height 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bar-x { font-size: 9px; color: var(--text3); }
+
+  /* ── Biomarker ── */
+  .bio-item {
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .bio-item:last-child { border-bottom: none; }
+  .bio-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .bio-name { font-size: 13px; color: var(--text2); }
+  .bio-val { font-size: 12px; font-weight: 500; }
+  .bio-range { font-size: 9px; color: var(--text3); margin-top: 3px; }
+
+  /* ── Devices screen ── */
+  .device-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .device-card:active { transform: scale(0.98); }
+  .device-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .device-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .device-icon.green { background: rgba(61,220,132,0.12); }
+  .device-icon.blue { background: rgba(41,128,185,0.12); }
+  .device-icon.purple { background: rgba(142,68,173,0.12); }
+  .device-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .device-price { font-size: 12px; color: var(--accent); margin-top: 2px; }
+  .device-desc { font-size: 12px; color: var(--text3); line-height: 1.6; margin-bottom: 14px; }
+  .spec-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spec-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 10px;
+    color: var(--text2);
+  }
+  .device-connect-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: var(--transition);
+  }
+  .device-connect-btn:hover { background: rgba(61,220,132,0.08); }
+  .device-connect-btn.connected { background: rgba(61,220,132,0.1); border-color: rgba(61,220,132,0.3); color: var(--accent); }
+
+  /* ── CTA button ── */
+  .btn-primary {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--accent);
+    color: #0D1F17;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: var(--transition);
+    letter-spacing: 0.01em;
+  }
+  .btn-primary:active { transform: scale(0.97); background: var(--accent2); }
+
+  .btn-secondary {
+    width: calc(100% - 40px);
+    margin: 10px 20px 0;
+    padding: 14px;
+    border-radius: 16px;
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: var(--transition);
+  }
+  .btn-secondary:active { background: var(--surface2); }
+
+  /* ── Section headers ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+  .section-action {
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* ── Timeline ── */
+  .timeline { padding-left: 0; }
+  .tl-item {
+    display: flex;
+    gap: 14px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .tl-left { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .tl-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    margin-top: 4px;
+  }
+  .tl-content { flex: 1; }
+  .tl-month { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .tl-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .tl-badge {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+  }
+  .tl-badge.done { background: rgba(61,220,132,0.1); color: var(--accent); }
+  .tl-badge.active { background: rgba(243,156,18,0.1); color: var(--amber); }
+  .tl-badge.upcoming { background: var(--surface2); color: var(--text3); }
+
+  /* ── Telemedicine ── */
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .doc-card:active { transform: scale(0.98); }
+  .doc-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    background: var(--surface2);
+  }
+  .doc-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .doc-spec { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .doc-avail { font-size: 10px; color: var(--accent); margin-top: 3px; }
+  .doc-arrow { margin-left: auto; color: var(--text3); font-size: 16px; }
+
+  /* ── Scanning animation screen ── */
+  .scanning-screen {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .scanning-screen.show { display: flex; }
+  .scan-progress-ring { position: relative; width: 160px; height: 160px; margin: 0 auto 24px; }
+  .scan-progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .spr-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+  }
+  .spr-pct { font-family: 'Fraunces', serif; font-size: 36px; color: var(--text); }
+  .spr-label { font-size: 11px; color: var(--text3); }
+  .scan-step { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+  .scan-sub { font-size: 11px; color: var(--text3); }
+  .scan-steps-list { width: 100%; margin-top: 24px; }
+  .ss-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+    transition: var(--transition);
+  }
+  .ss-item:last-child { border-bottom: none; }
+  .ss-item.done { color: var(--text2); }
+  .ss-item.active { color: var(--accent); }
+  .ss-check { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; }
+  .ss-check.done { background: var(--accent); border-color: var(--accent); color: #0D1F17; }
+  .ss-check.active { border-color: var(--accent); }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer {
+    0% { stroke-dashoffset: 502; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /* ── Tab SVG icons ── */
+  .tab-svg { width: 22px; height: 22px; }
+  .tab-svg path, .tab-svg circle, .tab-svg rect { fill: var(--text3); transition: var(--transition); }
+  .tab.active .tab-svg path,
+  .tab.active .tab-svg circle,
+  .tab.active .tab-svg rect { fill: var(--accent); }
+
+  /* ── Outer page controls ── */
+  .page-controls {
+    margin-top: 24px;
+    display: flex;
+    gap: 10px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .ctrl-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: var(--transition);
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+
+  /* ── Notification toast ── */
+  .toast {
+    position: absolute;
+    top: 60px; left: 16px; right: 16px;
+    background: var(--surface2);
+    border: 1px solid rgba(61,220,132,0.3);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 300;
+    transform: translateY(-80px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 16px; flex-shrink: 0; }
+  .toast-text { font-size: 12px; color: var(--text); line-height: 1.4; }
+
+  /* Segment control */
+  .segment {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 3px;
+    margin-bottom: 14px;
+  }
+  .seg-btn {
+    flex: 1;
+    padding: 7px 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: var(--transition);
+  }
+  .seg-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Follicle AI</h1>
+  <p>Interactive App Prototype · Tap to explore all screens</p>
+</div>
+
+<div class="phone-scene">
+  <div class="phone">
+    <div class="phone-notch">
+      <div class="notch-pill"></div>
+      <div class="notch-cam"></div>
+    </div>
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="display:flex;gap:5px;align-items:center;">
+        <span>●●●</span>
+        <span>WiFi</span>
+        <span>87%</span>
+      </span>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+      <span class="toast-icon">🔬</span>
+      <span class="toast-text">Scan complete! Recovery score updated to <strong>78/100</strong></span>
+    </div>
+
+    <!-- SCANNING OVERLAY -->
+    <div class="scanning-screen" id="scanningScreen">
+      <div class="scan-progress-ring">
+        <svg viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+          <circle cx="80" cy="80" r="70" fill="none" stroke="var(--accent)" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="440"
+            id="scanRingProgress"/>
+        </svg>
+        <div class="spr-center">
+          <div class="spr-pct" id="scanPct">0%</div>
+          <div class="spr-label">Analyzing</div>
+        </div>
+      </div>
+      <div class="scan-step" id="scanStep">Initializing sensors...</div>
+      <div class="scan-sub">Hold still. Keep device steady.</div>
+      <div class="scan-steps-list">
+        <div class="ss-item" id="ss1"><div class="ss-check" id="sc1"></div>Multi-spectral imaging</div>
+        <div class="ss-item" id="ss2"><div class="ss-check" id="sc2"></div>Follicle density mapping</div>
+        <div class="ss-item" id="ss3"><div class="ss-check" id="sc3"></div>Miniaturization detection</div>
+        <div class="ss-item" id="ss4"><div class="ss-check" id="sc4"></div>DHT pattern analysis</div>
+        <div class="ss-item" id="ss5"><div class="ss-check" id="sc5"></div>Generating AI report</div>
+      </div>
+    </div>
+
+    <div class="screens-wrap">
+
+      <!-- ══════════════════════════════════
+           SCREEN 1: SCAN
+      ══════════════════════════════════ -->
+      <div class="screen active" id="screen-scan">
+        <div class="nav">
+          <div>
+            <div class="nav-title">AI Scan</div>
+            <div class="nav-sub">Monthly scalp analysis</div>
+          </div>
+          <div class="nav-avatar">AK</div>
+        </div>
+
+        <div class="scan-viewport">
+          <div class="scan-bg"></div>
+          <div class="scan-ring">
+            <div class="scan-inner"></div>
+            <div class="scan-pulse"></div>
+          </div>
+          <div class="scan-dots">
+            <div class="sdot" style="top:30%;left:35%;background:#3DDC84;animation-delay:0s;"></div>
+            <div class="sdot" style="top:40%;left:65%;background:#F39C12;animation-delay:0.8s;"></div>
+            <div class="sdot" style="top:65%;left:42%;background:#3DDC84;animation-delay:1.6s;"></div>
+            <div class="sdot" style="top:55%;left:70%;background:#3DDC84;animation-delay:0.4s;"></div>
+          </div>
+          <div class="scan-hint">Attach Follicle AI Lens · Position over scalp</div>
+        </div>
+
+        <div class="scroll-area">
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="metric-val green">94.7%</div>
+              <div class="metric-name">Scan accuracy</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val">47</div>
+              <div class="metric-name">Markers detected</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val">28d</div>
+              <div class="metric-name">Last scan</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val green">Stage 2</div>
+              <div class="metric-name">Norwood grade</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-label">Connected Hardware</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(61,220,132,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;">🔬</div>
+                <div>
+                  <div style="font-size:12px;color:var(--text);font-weight:500;">Clip-On Dermatoscope</div>
+                  <div style="font-size:10px;color:var(--accent);">● Connected</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text3);">v2.1</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:8px;background:rgba(41,128,185,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;">⛑️</div>
+                <div>
+                  <div style="font-size:12px;color:var(--text);font-weight:500;">LLLT Helmet</div>
+                  <div style="font-size:10px;color:var(--amber);">● Last used 2d ago</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text3);">82%</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="startScan()">Start AI Scan</button>
+        <button class="btn-secondary" onclick="goTab('devices')">Manage Devices</button>
+        <div style="height:12px;"></div>
+        <div id="tab-bar-scan"></div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           SCREEN 2: DASHBOARD
+      ══════════════════════════════════ -->
+      <div class="screen" id="screen-dashboard">
+        <div class="nav">
+          <div>
+            <div class="nav-title">Dashboard</div>
+            <div class="nav-sub">Month 7 of 12</div>
+          </div>
+          <div class="nav-badge">On Track ✓</div>
+        </div>
+
+        <div class="scroll-area">
+          <!-- Score ring -->
+          <div class="score-hero">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--accent)" stroke-width="10"
+                  stroke-linecap="round"
+                  stroke-dasharray="364" stroke-dashoffset="80"
+                  style="filter:drop-shadow(0 0 6px rgba(61,220,132,0.5))"/>
+                <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(61,220,132,0.15)" stroke-width="10"
+                  stroke-dasharray="80 284" stroke-dashoffset="0"/>
+              </svg>
+              <div class="ring-center">
+                <div class="ring-score">78</div>
+                <div class="ring-label">recovery score</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:20px;text-align:center;">
+              <div><div style="font-size:13px;color:var(--accent);font-weight:500;">+23%</div><div style="font-size:10px;color:var(--text3);">vs Month 1</div></div>
+              <div style="width:1px;background:var(--border);"></div>
+              <div><div style="font-size:13px;color:var(--text);font-weight:500;">Month 12</div><div style="font-size:10px;color:var(--text3);">target recovery</div></div>
+              <div style="width:1px;background:var(--border);"></div>
+              <div><div style="font-size:13px;color:var(--amber);font-weight:500;">1 alert</div><div style="font-size:10px;color:var(--text3);">action needed</div></div>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="metric-val">142</div>
+              <div class="metric-name">Hairs per cm²</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val green">Low</div>
+              <div class="metric-name">DHT activity</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val">68%</div>
+              <div class="metric-name">Protocol adherence</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val amber">3mm</div>
+              <div class="metric-name">New growth avg</div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Alerts & Insights</div>
+          </div>
+
+          <div class="alert success">
+            <div class="alert-icon">✓</div>
+            <div>
+              <div class="alert-text">On track for full recovery by Month 12</div>
+              <div class="alert-sub">Crown density improved 31% · Continue current protocol</div>
+            </div>
+          </div>
+          <div class="alert warning">
+            <div class="alert-icon">!</div>
+            <div>
+              <div class="alert-text">Vitamin D levels suboptimal — increase D3/K2 dose</div>
+              <div class="alert-sub">Low vitamin D slows follicle cycling · Detected from last blood sync</div>
+            </div>
+          </div>
+          <div class="alert info">
+            <div class="alert-icon">i</div>
+            <div>
+              <div class="alert-text">Autumn seasonal shedding risk period starting</div>
+              <div class="alert-sub">Protocol intensity auto-increased · No action needed</div>
+            </div>
+          </div>
+
+          <div class="section-header" style="margin-top:6px;">
+            <div class="section-title">7-Month Progress</div>
+            <div class="section-action">Details →</div>
+          </div>
+          <div class="card">
+            <div class="bar-chart">
+              <div class="bar-wrap"><div class="bar" style="height:22%;background:rgba(61,220,132,0.2);"></div><div class="bar-x">M1</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:32%;background:rgba(61,220,132,0.3);"></div><div class="bar-x">M2</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:40%;background:rgba(61,220,132,0.4);"></div><div class="bar-x">M3</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:52%;background:rgba(61,220,132,0.5);"></div><div class="bar-x">M4</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:64%;background:rgba(61,220,132,0.65);"></div><div class="bar-x">M5</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:74%;background:rgba(61,220,132,0.8);"></div><div class="bar-x">M6</div></div>
+              <div class="bar-wrap"><div class="bar" style="height:85%;background:var(--accent);"></div><div class="bar-x">M7</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           SCREEN 3: HAIR MAP
+      ══════════════════════════════════ -->
+      <div class="screen" id="screen-map">
+        <div class="nav">
+          <div>
+            <div class="nav-title">Hair Map</div>
+            <div class="nav-sub">Scalp density heatmap</div>
+          </div>
+          <div class="nav-badge">Month 7</div>
+        </div>
+
+        <div class="scroll-area">
+          <div class="segment">
+            <div class="seg-btn active" onclick="setMapSeg(this,'current')">Current</div>
+            <div class="seg-btn" onclick="setMapSeg(this,'month1')">Month 1</div>
+            <div class="seg-btn" onclick="setMapSeg(this,'diff')">Difference</div>
+          </div>
+
+          <div class="heatmap-container">
+            <canvas id="heatmapCanvas" width="300" height="200" class="heatmap-canvas"></canvas>
+          </div>
+
+          <div style="display:flex;justify-content:center;gap:16px;margin:10px 0 16px;">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);">
+              <div style="width:10px;height:10px;border-radius:2px;background:#27AE60;"></div>High density
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);">
+              <div style="width:10px;height:10px;border-radius:2px;background:#F39C12;"></div>Focus zone
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);">
+              <div style="width:10px;height:10px;border-radius:2px;background:#E74C3C;"></div>Sparse
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Zone Analysis</div>
+          </div>
+          <div class="card">
+            <div class="prog-wrap">
+              <div class="prog-header"><span class="prog-name">Crown</span><span class="prog-val green">142/cm²</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:78%;background:var(--accent);"></div></div>
+            </div>
+            <div class="prog-wrap">
+              <div class="prog-header"><span class="prog-name">Frontal hairline</span><span class="prog-val amber">89/cm²</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:48%;background:var(--amber);"></div></div>
+            </div>
+            <div class="prog-wrap">
+              <div class="prog-header"><span class="prog-name">Left temporal</span><span class="prog-val amber">97/cm²</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:52%;background:var(--amber);"></div></div>
+            </div>
+            <div class="prog-wrap">
+              <div class="prog-header"><span class="prog-name">Right temporal</span><span class="prog-val amber">102/cm²</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:55%;background:var(--amber);"></div></div>
+            </div>
+            <div class="prog-wrap" style="margin-bottom:0;">
+              <div class="prog-header"><span class="prog-name">Occipital (back)</span><span class="prog-val green">168/cm²</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:90%;background:var(--accent);"></div></div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Recovery Timeline</div>
+          </div>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--accent);"></div><div class="tl-line"></div></div>
+              <div class="tl-content"><div class="tl-month">Month 1–2</div><div class="tl-text">Baseline established. Protocol assigned.</div><div class="tl-badge done">Complete</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--accent);"></div><div class="tl-line"></div></div>
+              <div class="tl-content"><div class="tl-month">Month 3–4</div><div class="tl-text">Shedding phase managed. Transition started.</div><div class="tl-badge done">Complete</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--accent);"></div><div class="tl-line"></div></div>
+              <div class="tl-content"><div class="tl-month">Month 5–6</div><div class="tl-text">Vellus regrowth detected by AI scan.</div><div class="tl-badge done">Complete</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--amber);"></div><div class="tl-line"></div></div>
+              <div class="tl-content"><div class="tl-month">Month 7–9 (Now)</div><div class="tl-text">Terminal hair growth. 20–40% density improvement target.</div><div class="tl-badge active">In Progress</div></div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left"><div class="tl-dot" style="background:var(--border2);"></div></div>
+              <div class="tl-content"><div class="tl-month">Month 10–12</div><div class="tl-text">Full recovery target: 70–90% density.</div><div class="tl-badge upcoming">Upcoming</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           SCREEN 4: TREATMENT PLAN
+      ══════════════════════════════════ -->
+      <div class="screen" id="screen-plan">
+        <div class="nav">
+          <div>
+            <div class="nav-title">My Protocol</div>
+            <div class="nav-sub">AI-personalized · Week 28</div>
+          </div>
+          <div class="nav-badge">85% adherence</div>
+        </div>
+
+        <div class="scroll-area">
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-label">Today's Progress</div>
+            <div class="prog-wrap" style="margin-bottom:8px;">
+              <div class="prog-header"><span class="prog-name">Overall adherence</span><span class="prog-val green">85%</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:85%;background:var(--accent);"></div></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;background:var(--surface2);border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:16px;font-weight:600;color:var(--accent);">5</div>
+                <div style="font-size:9px;color:var(--text3);">Done today</div>
+              </div>
+              <div style="flex:1;background:var(--surface2);border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:16px;font-weight:600;color:var(--amber);">1</div>
+                <div style="font-size:9px;color:var(--text3);">Remaining</div>
+              </div>
+              <div style="flex:1;background:var(--surface2);border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:16px;font-weight:600;color:var(--text);">196</div>
+                <div style="font-size:9px;color:var(--text3);">Day streak</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Daily Tasks</div>
+            <div class="section-action">History</div>
+          </div>
+
+          <div class="card">
+            <div class="treatment-item">
+              <div class="t-dot" style="background:var(--accent);"></div>
+              <div class="t-content">
+                <div class="t-name">Minoxidil 8% + GHK-Cu Serum</div>
+                <div class="t-sub">Morning application · custom compounded</div>
+              </div>
+              <div class="t-check done" onclick="toggleCheck(this)">✓</div>
+            </div>
+            <div class="treatment-item">
+              <div class="t-dot" style="background:var(--blue);"></div>
+              <div class="t-content">
+                <div class="t-name">LLLT Helmet Session</div>
+                <div class="t-sub">20 min · Mon / Wed / Fri</div>
+              </div>
+              <div class="t-check done" onclick="toggleCheck(this)">✓</div>
+            </div>
+            <div class="treatment-item">
+              <div class="t-dot" style="background:var(--amber);"></div>
+              <div class="t-content">
+                <div class="t-name">Supplement Stack</div>
+                <div class="t-sub">Saw palmetto + D3/K2 + Zinc + Collagen</div>
+              </div>
+              <div class="t-check done" onclick="toggleCheck(this)">✓</div>
+            </div>
+            <div class="treatment-item">
+              <div class="t-dot" style="background:var(--purple);"></div>
+              <div class="t-content">
+                <div class="t-name">Scalp Microneedling (0.75mm)</div>
+                <div class="t-sub">Saturday only · after LLLT gap</div>
+              </div>
+              <div class="t-check" onclick="toggleCheck(this)"></div>
+            </div>
+            <div class="treatment-item">
+              <div class="t-dot" style="background:var(--accent);"></div>
+              <div class="t-content">
+                <div class="t-name">Evening Topical Re-application</div>
+                <div class="t-sub">PM serum on hairline + temples</div>
+              </div>
+              <div class="t-check done" onclick="toggleCheck(this)">✓</div>
+            </div>
+          </div>
+
+          <div class="section-header" style="margin-top:4px;">
+            <div class="section-title">Weekly Schedule</div>
+          </div>
+          <div class="card">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;">
+              <div style="font-size:9px;color:var(--text3);">Mon</div>
+              <div style="font-size:9px;color:var(--text3);">Tue</div>
+              <div style="font-size:9px;color:var(--text3);">Wed</div>
+              <div style="font-size:9px;color:var(--text3);">Thu</div>
+              <div style="font-size:9px;color:var(--text3);">Fri</div>
+              <div style="font-size:9px;color:var(--text3);">Sat</div>
+              <div style="font-size:9px;color:var(--text3);">Sun</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;color:#0D1F17;font-weight:600;">✓</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">T</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;color:#0D1F17;font-weight:600;">✓</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">T</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;color:#0D1F17;font-weight:600;">L</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:rgba(142,68,173,0.4);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;">M</div>
+              <div style="width:100%;aspect-ratio:1;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">R</div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><div style="width:8px;height:8px;border-radius:2px;background:var(--accent);"></div>LLLT</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><div style="width:8px;height:8px;border-radius:2px;background:rgba(142,68,173,0.6);"></div>Microneedle</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);"><div style="width:8px;height:8px;border-radius:2px;background:var(--surface2);border:1px solid var(--border2);"></div>Topicals + Supps</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           SCREEN 5: BIOMARKERS
+      ══════════════════════════════════ -->
+      <div class="screen" id="screen-bio">
+        <div class="nav">
+          <div>
+            <div class="nav-title">Biomarkers</div>
+            <div class="nav-sub">Last synced: Mar 10, 2026</div>
+          </div>
+          <div class="nav-badge">Synced ✓</div>
+        </div>
+
+        <div class="scroll-area">
+          <div class="card">
+            <div class="card-label">Blood Panel</div>
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">DHT Level</div>
+                <div class="bio-val" style="color:var(--accent);">Normal</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:38%;background:var(--accent);"></div></div>
+              <div class="bio-range">340 pg/mL · Target: &lt;450 · ↓ from 520 at baseline</div>
+            </div>
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">Ferritin (Iron stores)</div>
+                <div class="bio-val" style="color:var(--accent);">Good</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:72%;background:var(--accent);"></div></div>
+              <div class="bio-range">82 ng/mL · Target: &gt;70 · Optimal for hair cycling</div>
+            </div>
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">Vitamin D3</div>
+                <div class="bio-val" style="color:var(--amber);">Low</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:28%;background:var(--amber);"></div></div>
+              <div class="bio-range">22 ng/mL · Target: &gt;40 · ⚡ Action required</div>
+            </div>
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">Thyroid (TSH)</div>
+                <div class="bio-val" style="color:var(--accent);">Normal</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:58%;background:var(--accent);"></div></div>
+              <div class="bio-range">1.8 mIU/L · Target: 1.0–2.5</div>
+            </div>
+            <div class="bio-item" style="border-bottom:none;">
+              <div class="bio-header">
+                <div class="bio-name">Testosterone</div>
+                <div class="bio-val" style="color:var(--accent);">Normal</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:62%;background:var(--accent);"></div></div>
+              <div class="bio-range">520 ng/dL · Within healthy range</div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Genetic Risk Profile</div>
+          </div>
+          <div class="card">
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">AR Gene variant (X-linked)</div>
+                <div class="bio-val" style="color:var(--amber);">Moderate</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:55%;background:var(--amber);"></div></div>
+              <div class="bio-range">Androgenetic alopecia susceptibility · Managed by DHT blocking protocol</div>
+            </div>
+            <div class="bio-item">
+              <div class="bio-header">
+                <div class="bio-name">5-alpha reductase type II</div>
+                <div class="bio-val" style="color:var(--accent);">Low</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:22%;background:var(--accent);"></div></div>
+              <div class="bio-range">Lower DHT conversion risk · Favourable outcome predicted</div>
+            </div>
+            <div class="bio-item" style="border-bottom:none;">
+              <div class="bio-header">
+                <div class="bio-name">HDAC4 expression</div>
+                <div class="bio-val" style="color:var(--accent);">Normal</div>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:40%;background:var(--accent);"></div></div>
+              <div class="bio-range">Hair follicle stem cell cycle gene · Normal expression</div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Connected Sources</div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:18px;">🧬</div>
+                <div><div style="font-size:12px;color:var(--text);font-weight:500;">23andMe DNA</div><div style="font-size:10px;color:var(--accent);">● Synced · 2.3M markers</div></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:18px;">⌚</div>
+                <div><div style="font-size:12px;color:var(--text);font-weight:500;">Apple Watch</div><div style="font-size:10px;color:var(--accent);">● HRV, sleep, cortisol</div></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:18px;">🧪</div>
+                <div><div style="font-size:12px;color:var(--text);font-weight:500;">At-Home Lab Kit</div><div style="font-size:10px;color:var(--accent);">● Mar 10 results uploaded</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           SCREEN 6: DEVICES
+      ══════════════════════════════════ -->
+      <div class="screen" id="screen-devices">
+        <div class="nav">
+          <div>
+            <div class="nav-title">Devices</div>
+            <div class="nav-sub">Hardware ecosystem</div>
+          </div>
+        </div>
+
+        <div class="scroll-area">
+          <div class="device-card">
+            <div class="device-header">
+              <div class="device-icon green">🔬</div>
+              <div>
+                <div class="device-name">Clip-On Dermatoscope</div>
+                <div class="device-price">$89 · Included with 12-mo plan</div>
+              </div>
+            </div>
+            <div class="device-desc">Multi-spectral smartphone attachment. Captures UV, visible light, and near-infrared images for clinical-grade follicle analysis. 10–20x optical zoom with polarized LED ring.</div>
+            <div class="spec-row">
+              <span class="spec-tag">10–20x zoom</span>
+              <span class="spec-tag">UV + NIR</span>
+              <span class="spec-tag">Clip-on</span>
+              <span class="spec-tag">32mm · 18g</span>
+              <span class="spec-tag">94.7% accuracy</span>
+            </div>
+            <button class="device-connect-btn connected">● Connected · v2.1 firmware</button>
+          </div>
+
+          <div class="device-card">
+            <div class="device-header">
+              <div class="device-icon blue">⛑️</div>
+              <div>
+                <div class="device-name">Smart LLLT Helmet</div>
+                <div class="device-price">$349 · $249 with annual plan</div>
+              </div>
+            </div>
+            <div class="device-desc">272-diode 650nm laser therapy helmet with full scalp coverage. AI-synced via Bluetooth — automatically adjusts session intensity and frequency based on your scan data.</div>
+            <div class="spec-row">
+              <span class="spec-tag">272 diodes</span>
+              <span class="spec-tag">650nm</span>
+              <span class="spec-tag">FDA-cleared</span>
+              <span class="spec-tag">3hr battery</span>
+              <span class="spec-tag">BT 5.0</span>
+            </div>
+            <button class="device-connect-btn" onclick="connectDevice(this)">Connect Device</button>
+          </div>
+
+          <div class="device-card">
+            <div class="device-header">
+              <div class="device-icon purple">💉</div>
+              <div>
+                <div class="device-name">Smart Microneedling Pen</div>
+                <div class="device-price">$129 · $99 with any subscription</div>
+              </div>
+            </div>
+            <div class="device-desc">Bluetooth-connected microneedling device with AI-guided depth recommendations per scalp zone. 12,000 RPM motor with autoclave-sterilizable titanium cartridges.</div>
+            <div class="spec-row">
+              <span class="spec-tag">0.25–1.5mm</span>
+              <span class="spec-tag">12k RPM</span>
+              <span class="spec-tag">BT 5.0</span>
+              <span class="spec-tag">AI-guided</span>
+              <span class="spec-tag">Titanium</span>
+            </div>
+            <button class="device-connect-btn" onclick="connectDevice(this)">Connect Device</button>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Telemedicine</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-avatar">👩‍⚕️</div>
+            <div>
+              <div class="doc-name">Dr. Priya Sharma</div>
+              <div class="doc-spec">Board-certified Trichologist</div>
+              <div class="doc-avail">● Available today · Video or async</div>
+            </div>
+            <div class="doc-arrow">›</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-avatar">👨‍⚕️</div>
+            <div>
+              <div class="doc-name">Dr. James Okonkwo</div>
+              <div class="doc-spec">Dermatologist · Hair Specialist</div>
+              <div class="doc-avail">● Next slot: Tomorrow 10am</div>
+            </div>
+            <div class="doc-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end screens-wrap -->
+
+    <!-- TAB BAR (shared, absolutely positioned) -->
+    <div class="tab-bar" style="position:absolute;bottom:0;left:0;right:0;z-index:50;">
+      <div class="tab active" id="tab-scan" onclick="goTab('scan')">
+        <svg class="tab-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M2 12a10 10 0 0 1 10-10M22 12a10 10 0 0 1-10 10"/></svg>
+        <div class="tab-label">Scan</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab" id="tab-dashboard" onclick="goTab('dashboard')">
+        <svg class="tab-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+        <div class="tab-label">Dashboard</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab" id="tab-map" onclick="goTab('map')">
+        <svg class="tab-svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <div class="tab-label">Hair Map</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab" id="tab-plan" onclick="goTab('plan')">
+        <svg class="tab-svg" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <div class="tab-label">Protocol</div>
+        <div class="tab-dot"></div>
+      </div>
+      <div class="tab" id="tab-bio" onclick="goTab('bio')">
+        <svg class="tab-svg" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <div class="tab-label">Labs</div>
+        <div class="tab-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-controls">
+  <button class="ctrl-btn" onclick="goTab('scan')">Scan</button>
+  <button class="ctrl-btn" onclick="goTab('dashboard')">Dashboard</button>
+  <button class="ctrl-btn" onclick="goTab('map')">Hair Map</button>
+  <button class="ctrl-btn" onclick="goTab('plan')">Protocol</button>
+  <button class="ctrl-btn" onclick="goTab('bio')">Labs</button>
+  <button class="ctrl-btn" onclick="goTab('devices')">Devices</button>
+</div>
+
+<script>
+let currentScreen = 'scan';
+
+function goTab(name) {
+  const old = document.getElementById('screen-' + currentScreen);
+  const next = document.getElementById('screen-' + name);
+  if (!next || currentScreen === name) return;
+
+  old.classList.remove('active');
+  old.classList.add('slide-out');
+  setTimeout(() => old.classList.remove('slide-out'), 320);
+
+  next.classList.add('active');
+  currentScreen = name;
+
+  // Update tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('tab-' + name);
+  if (tabEl) tabEl.classList.add('active');
+
+  // Draw heatmap when map tab opens
+  if (name === 'map') setTimeout(drawHeatmap, 100);
+}
+
+function startScan() {
+  const overlay = document.getElementById('scanningScreen');
+  overlay.classList.add('show');
+
+  let pct = 0;
+  const steps = [
+    {id:'ss1',check:'sc1',label:'Capturing multi-spectral image...',time:600},
+    {id:'ss2',check:'sc2',label:'Mapping follicle density zones...',time:600},
+    {id:'ss3',check:'sc3',label:'Detecting miniaturization patterns...',time:700},
+    {id:'ss4',check:'sc4',label:'Analysing DHT sebum signature...',time:600},
+    {id:'ss5',check:'sc5',label:'Generating AI recovery report...',time:800},
+  ];
+
+  const ring = document.getElementById('scanRingProgress');
+  const pctEl = document.getElementById('scanPct');
+  const stepEl = document.getElementById('scanStep');
+
+  let stepIndex = 0;
+  function runStep() {
+    if (stepIndex >= steps.length) {
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        showToast();
+        goTab('dashboard');
+      }, 600);
+      return;
+    }
+    const s = steps[stepIndex];
+    document.getElementById(s.id).classList.add('active');
+    document.getElementById(s.check).classList.add('active');
+    stepEl.textContent = s.label;
+
+    const targetPct = Math.round(((stepIndex + 1) / steps.length) * 100);
+    const startPct = pct;
+    const startTime = Date.now();
+    function animPct() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / s.time, 1);
+      pct = Math.round(startPct + (targetPct - startPct) * progress);
+      pctEl.textContent = pct + '%';
+      const dashOffset = 440 - (440 * pct / 100);
+      ring.setAttribute('stroke-dashoffset', dashOffset);
+      if (progress < 1) requestAnimationFrame(animPct);
+      else {
+        document.getElementById(s.id).classList.remove('active');
+        document.getElementById(s.id).classList.add('done');
+        document.getElementById(s.check).classList.remove('active');
+        document.getElementById(s.check).classList.add('done');
+        document.getElementById(s.check).textContent = '✓';
+        stepIndex++;
+        setTimeout(runStep, 200);
+      }
+    }
+    requestAnimationFrame(animPct);
+  }
+  runStep();
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('done');
+  el.textContent = el.classList.contains('done') ? '✓' : '';
+}
+
+function connectDevice(btn) {
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '● Connected · Pair successful';
+    btn.classList.add('connected');
+    btn.disabled = false;
+  }, 1800);
+}
+
+function setMapSeg(el, mode) {
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  drawHeatmap(mode);
+}
+
+function drawHeatmap(mode) {
+  mode = mode || 'current';
+  const canvas = document.getElementById('heatmapCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 300, H = 200;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background scalp silhouette
+  ctx.fillStyle = '#162B1F';
+  ctx.beginPath();
+  ctx.ellipse(150, 100, 130, 90, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Zone data per mode
+  const zones = {
+    current: [
+      {cx:150,cy:70,rx:80,ry:45,color:'rgba(39,174,96,0.65)',label:'Crown',val:'142/cm²'},
+      {cx:80,cy:100,rx:45,ry:38,color:'rgba(243,156,18,0.6)',label:'Left',val:'97/cm²'},
+      {cx:220,cy:100,rx:45,ry:38,color:'rgba(243,156,18,0.6)',label:'Right',val:'102/cm²'},
+      {cx:150,cy:155,rx:55,ry:30,color:'rgba(39,174,96,0.7)',label:'Back',val:'168/cm²'},
+      {cx:150,cy:45,rx:60,ry:22,color:'rgba(243,156,18,0.55)',label:'Hairline',val:'89/cm²'},
+    ],
+    month1: [
+      {cx:150,cy:70,rx:80,ry:45,color:'rgba(231,76,60,0.5)',label:'Crown',val:'82/cm²'},
+      {cx:80,cy:100,rx:45,ry:38,color:'rgba(231,76,60,0.55)',label:'Left',val:'64/cm²'},
+      {cx:220,cy:100,rx:45,ry:38,color:'rgba(231,76,60,0.55)',label:'Right',val:'68/cm²'},
+      {cx:150,cy:155,rx:55,ry:30,color:'rgba(243,156,18,0.5)',label:'Back',val:'140/cm²'},
+      {cx:150,cy:45,rx:60,ry:22,color:'rgba(231,76,60,0.6)',label:'Hairline',val:'55/cm²'},
+    ],
+    diff: [
+      {cx:150,cy:70,rx:80,ry:45,color:'rgba(61,220,132,0.6)',label:'Crown',val:'+60/cm²'},
+      {cx:80,cy:100,rx:45,ry:38,color:'rgba(61,220,132,0.5)',label:'Left',val:'+33/cm²'},
+      {cx:220,cy:100,rx:45,ry:38,color:'rgba(61,220,132,0.5)',label:'Right',val:'+34/cm²'},
+      {cx:150,cy:155,rx:55,ry:30,color:'rgba(61,220,132,0.4)',label:'Back',val:'+28/cm²'},
+      {cx:150,cy:45,rx:60,ry:22,color:'rgba(61,220,132,0.45)',label:'Line',val:'+34/cm²'},
+    ]
+  };
+
+  const z = zones[mode] || zones.current;
+  z.forEach(zone => {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = zone.color;
+    ctx.beginPath();
+    ctx.ellipse(zone.cx, zone.cy, zone.rx, zone.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(zone.label, zone.cx, zone.cy - 4);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '8px DM Mono, monospace';
+    ctx.fillText(zone.val, zone.cx, zone.cy + 8);
+  });
+
+  // Outer border
+  ctx.strokeStyle = 'rgba(61,220,132,0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(150, 100, 130, 90, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// Init
+window.addEventListener('load', () => {
+  setTimeout(drawHeatmap, 300);
+});
+</script>
+</body>
+</html>
